@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Numbers 16–20 · LY2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', 'Trebuchet MS', Arial, sans-serif;
+      background: linear-gradient(135deg, #fce4ec 0%, #e8f5e9 50%, #e3f2fd 100%);
+      height: 100vh; height: 100dvh;
+      display: flex; align-items: stretch; justify-content: center;
+      overflow: hidden; user-select: none; -webkit-user-select: none;
+    }
+
+    /* ── INTRO ── */
+    #intro-screen {
+      position: fixed; inset: 0;
+      background: linear-gradient(160deg, #4a148c, #7b1fa2, #ab47bc);
+      display: flex; align-items: center; justify-content: center;
+      border: 5px solid #FFD700; z-index: 200; cursor: pointer;
+    }
+    #intro-logo { width: 220px; height: auto; filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5)); animation: logoBounce 2s ease-in-out infinite; }
+    @keyframes logoBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+
+    /* ── GAME SCREEN ── */
+    #game-screen {
+      display: none; flex-direction: column;
+      width: 100%; max-width: 860px;
+      height: 100%; padding: 14px 14px 80px; overflow-y: auto;
+    }
+
+    .hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      background: white; border-radius: 18px; padding: 10px 18px;
+      margin-bottom: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.1); flex-shrink: 0;
+    }
+    .hdr-score { font-size: 1.2em; font-weight: bold; color: #4CAF50; min-width: 70px; }
+    .hdr-title { font-size: clamp(0.75em,2.5vw,1em); color: #6a0dad; font-weight: bold; text-align: center; }
+    .mute-btn { width: 38px; height: 38px; border: 2px solid #ddd; border-radius: 50%; background: white; font-size: 1.1em; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-shrink: 0; }
+    .progress-label { font-size: 0.9em; color: #777; white-space: nowrap; }
+    .progress-bar-wrap { flex: 1; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg,#4CAF50,#8BC34A); transition: width 0.5s ease; }
+
+    .instruction {
+      text-align: center; font-size: clamp(0.95em,3vw,1.15em);
+      color: #333; font-weight: 700; margin-bottom: 10px;
+      padding: 0 4px; flex-shrink: 0; line-height: 1.4;
+    }
+
+    .q-card {
+      background: white; border-radius: 24px; padding: 24px 16px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+      display: flex; flex-direction: column; align-items: center; gap: 24px;
+      margin-top: auto; margin-bottom: auto; flex-shrink: 0;
+    }
+
+    /* ── ROCKET SCENE ── */
+    .rocket-scene {
+      display: flex; justify-content: center; align-items: flex-end;
+      gap: 14px; width: 100%; padding: 8px 0 4px;
+    }
+
+    .rocket-wrap {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      flex: 1; max-width: 90px;
+    }
+
+    .rocket-wrap svg { width: 100%; height: auto; display: block; }
+
+    .rocket-wrap.missing svg {
+      animation: missingPulse 1.4s ease-in-out infinite;
+    }
+    @keyframes missingPulse {
+      0%,100% { filter: drop-shadow(0 0 0px rgba(108,92,231,0)); }
+      50%      { filter: drop-shadow(0 0 10px rgba(108,92,231,0.7)); }
+    }
+
+    .rocket-wrap.correct-anim svg { animation: rocketPop 0.4s ease; }
+    @keyframes rocketPop { 0%{transform:scale(1)} 50%{transform:scale(1.12) translateY(-6px)} 100%{transform:scale(1)} }
+
+    /* Launchpad base under each rocket */
+    .launchpad {
+      width: 80%; height: 8px;
+      background: linear-gradient(90deg, #b2bec3, #636e72, #b2bec3);
+      border-radius: 4px;
+    }
+
+    /* ── CHOICES ── */
+    .choices-label { font-size: 0.9em; color: #999; font-weight: 700; letter-spacing: 0.05em; }
+    .choices-row { display: flex; gap: 16px; justify-content: center; width: 100%; }
+    .choice-btn {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      border: 4px solid transparent; border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8em; font-weight: 800; color: white;
+      cursor: pointer; box-shadow: 0 4px 14px rgba(108,92,231,0.35);
+      transition: transform 0.1s, border-color 0.2s;
+    }
+    .choice-btn:active { transform: scale(0.92); }
+    .choice-btn.correct { border-color: #4CAF50; background: linear-gradient(135deg,#55efc4,#00b894); box-shadow: 0 0 0 5px #4CAF5040; animation: popCorrect 0.35s ease; }
+    .choice-btn.wrong   { border-color: #f44336; background: linear-gradient(135deg,#ff7675,#d63031); animation: shakeWrong 0.4s ease; }
+    .choice-btn.hint    { border-color: #FFD700; animation: pulseHint 1s ease-in-out infinite; }
+
+    @keyframes popCorrect { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+    @keyframes shakeWrong { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+    @keyframes pulseHint  { 0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,0.6)} 50%{box-shadow:0 0 0 12px rgba(255,215,0,0)} }
+
+    .btn-restart {
+      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg,#FF9800,#F57C00);
+      color: white; border: none; border-radius: 50px;
+      padding: 14px 36px; font-size: 1.05em; font-family: inherit;
+      font-weight: 800; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(255,152,0,0.4); z-index: 50; white-space: nowrap;
+    }
+
+    #toast {
+      position: fixed; top: 20%; left: 50%;
+      transform: translateX(-50%) scale(0);
+      color: white; padding: 14px 28px; border-radius: 50px;
+      font-size: 1.4em; font-weight: 800;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25); z-index: 100;
+      transition: transform 0.2s, opacity 0.2s;
+      opacity: 0; pointer-events: none; white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) scale(1); opacity: 1; }
+
+    .confetti-piece {
+      position: fixed; top: -10px; pointer-events: none; z-index: 999;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+
+    #end-screen {
+      display: none; position: fixed; inset: 0;
+      background: linear-gradient(160deg,#4a148c,#7b1fa2,#ab47bc);
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 18px; z-index: 150; padding: 30px;
+    }
+    .end-trophy { font-size: 4.5em; animation: trophySpin 1.5s ease-out; }
+    @keyframes trophySpin { from{transform:rotate(-20deg) scale(0)} 60%{transform:rotate(10deg) scale(1.1)} to{transform:rotate(0deg) scale(1)} }
+    .end-title { color: #FFD700; font-size: clamp(1.5em,5vw,2.2em); font-weight: bold; text-shadow: 0 3px 10px rgba(0,0,0,0.3); text-align: center; }
+    .end-sub { color: rgba(255,255,255,0.9); font-size: 1.1em; text-align: center; }
+    .end-score-box { background: rgba(255,255,255,0.15); border-radius: 16px; padding: 12px 28px; color: white; font-size: 1.4em; font-weight: bold; }
+    .end-stars { font-size: 2.2em; letter-spacing: 4px; }
+    .btn-play-again { background: #FFD700; color: #333; border: none; border-radius: 50px; padding: 14px 36px; font-size: 1.1em; font-weight: 800; font-family: inherit; cursor: pointer; box-shadow: 0 4px 16px rgba(255,215,0,0.5); }
+
+    @media (max-width: 768px) {
+      #game-screen { padding: 10px 10px 76px; }
+      .q-card { padding: 16px 10px; gap: 16px; }
+      .choice-btn { width: 70px; height: 70px; font-size: 1.6em; }
+      .hdr-title { display: none; }
+      .rocket-scene { gap: 10px; }
+    }
+    @media (max-width: 480px) {
+      #game-screen { padding: 8px 8px 76px; }
+      .q-card { padding: 12px 8px; gap: 12px; border-radius: 18px; }
+      .choice-btn { width: 64px; height: 64px; font-size: 1.5em; border-radius: 14px; }
+      .choices-row { gap: 12px; }
+      .hdr-score { font-size: 1em; }
+      .rocket-scene { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="intro-screen" onclick="startGame()">
+  <img id="intro-logo" src="assets/innovinelogo.png" alt="Innovine" onerror="this.style.display='none'">
+</div>
+
+<div id="toast"></div>
+
+<div id="game-screen">
+  <div class="hdr">
+    <div class="hdr-score">⭐ <span id="score-val">0</span> / 8</div>
+    <div class="hdr-title">Numbers 16–20</div>
+    <button class="mute-btn" id="mute-btn" onclick="toggleMute()">🔊</button>
+  </div>
+
+  <div class="progress-row">
+    <span class="progress-label">Q <span id="q-num">1</span> / 8</span>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="prog-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="instruction" id="instruction-txt"></div>
+
+  <div class="q-card">
+    <div class="rocket-scene" id="rocket-scene"></div>
+    <div class="choices-label">Pick the missing number</div>
+    <div class="choices-row" id="choices-row"></div>
+  </div>
+
+  <button class="btn-restart" onclick="restartGame()">🔄 &nbsp;Restart</button>
+</div>
+
+<div id="end-screen">
+  <div class="end-trophy">🏆</div>
+  <div class="end-title">You have done a great job!</div>
+  <div class="end-sub">You completed all 8 questions!</div>
+  <div class="end-score-box">Score: &nbsp;<span id="final-score">0</span> / 8</div>
+  <div class="end-stars" id="end-stars"></div>
+  <button class="btn-play-again" onclick="restartGame()">▶ &nbsp;Play Again</button>
+</div>
+
+<script>
+const NUM_COLORS = {
+  16: { body:'#7b1fa2', dark:'#4a148c' },
+  17: { body:'#1565c0', dark:'#0d47a1' },
+  18: { body:'#00897b', dark:'#00695c' },
+  19: { body:'#e65100', dark:'#bf360c' },
+  20: { body:'#c62828', dark:'#b71c1c' },
+};
+
+function rocketSVG(num, isMissing, isCorrect) {
+  if (isMissing && !isCorrect) {
+    return `<svg viewBox="0 0 70 130" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="35" cy="68" rx="20" ry="48" fill="#dfe6e9" stroke="#b2bec3" stroke-width="2"/>
+      <path d="M15,24 Q35,2 55,24" fill="#b2bec3"/>
+      <polygon points="15,96 2,118 16,110" fill="#b2bec3"/>
+      <polygon points="55,96 68,118 54,110" fill="#b2bec3"/>
+      <circle cx="35" cy="62" r="14" fill="#f0f0f0" stroke="#ccc" stroke-width="2" stroke-dasharray="4,2"/>
+      <text x="35" y="68" text-anchor="middle" font-size="17" font-weight="800" fill="#aaa" font-family="Nunito,Arial,sans-serif">?</text>
+    </svg>`;
+  }
+  const c = NUM_COLORS[num] || { body:'#7b1fa2', dark:'#4a148c' };
+  return `<svg viewBox="0 0 70 130" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="35" cy="112" rx="8" ry="13" fill="#FF9800" opacity="0.85"/>
+    <ellipse cx="35" cy="114" rx="4.5" ry="8" fill="#FFD700"/>
+    <ellipse cx="35" cy="68" rx="20" ry="48" fill="${c.body}"/>
+    <path d="M15,24 Q35,2 55,24" fill="${c.dark}"/>
+    <polygon points="15,96 2,118 16,110" fill="${c.dark}"/>
+    <polygon points="55,96 68,118 54,110" fill="${c.dark}"/>
+    <circle cx="35" cy="62" r="14" fill="rgba(255,255,255,0.22)" stroke="white" stroke-width="2"/>
+    <text x="35" y="68" text-anchor="middle" font-size="15" font-weight="800" fill="white" font-family="Nunito,Arial,sans-serif">${num}</text>
+    <circle cx="26" cy="85" r="2" fill="white" opacity="0.4"/>
+    <circle cx="44" cy="80" r="1.5" fill="white" opacity="0.4"/>
+  </svg>`;
+}
+
+const QUESTIONS = [
+  { sequence:[16,17,18,19], missingIdx:1, choices:[15,17,21], text:'What is the missing number? 16, ?, 18, 19' },
+  { sequence:[17,18,19,20], missingIdx:2, choices:[17,19,21], text:'What is the missing number? 17, 18, ?, 20' },
+  { sequence:[16,17,18,19], missingIdx:0, choices:[14,16,20], text:'What is the missing number? ?, 17, 18, 19' },
+  { sequence:[17,18,19,20], missingIdx:3, choices:[18,20,22], text:'What is the missing number? 17, 18, 19, ?' },
+  { sequence:[16,17,18,19], missingIdx:3, choices:[17,19,21], text:'What is the missing number? 16, 17, 18, ?' },
+  { sequence:[17,18,19,20], missingIdx:0, choices:[15,17,21], text:'What is the missing number? ?, 18, 19, 20' },
+  { sequence:[16,17,18,19], missingIdx:2, choices:[16,18,20], text:'What is the missing number? 16, 17, ?, 19' },
+  { sequence:[17,18,19,20], missingIdx:1, choices:[16,18,20], text:'What is the missing number? 17, ?, 19, 20' },
+];
+
+const sndWrong = new Audio('assets/wrong.mp3');
+const sndClaps = new Audio('assets/free_claps.mp3');
+
+let curQ = 0, score = 0, muted = false, answered = false, attempts = 0;
+
+function unlockAudio() {
+  [sndWrong, sndClaps].forEach(s => { s.play().catch(()=>{}); s.pause(); s.currentTime = 0; });
+  document.removeEventListener('pointerdown', unlockAudio);
+}
+document.addEventListener('pointerdown', unlockAudio);
+
+function getVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  return voices.find(v => v.lang.startsWith('en') && !v.name.includes('Google'))
+      || voices.find(v => v.lang.startsWith('en')) || voices[0];
+}
+
+function speakSequence(q) {
+  sndClaps.pause(); sndClaps.currentTime = 0;
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  if (muted) return;
+  setTimeout(() => {
+    if (muted) return;
+    const v = getVoice();
+    const texts = [
+      'What is the missing number',
+      ...q.sequence.map((n, i) => i === q.missingIdx ? 'blank' : String(n))
+    ];
+    texts.forEach(text => {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US'; u.rate = 0.7; u.pitch = 1.0;
+      if (v) u.voice = v;
+      window.speechSynthesis.speak(u);
+    });
+  }, 150);
+}
+window.speechSynthesis.getVoices();
+window.speechSynthesis.addEventListener('voiceschanged', () => window.speechSynthesis.getVoices());
+
+function playClaps() {
+  if (muted) return;
+  sndClaps.currentTime = 0; sndClaps.play().catch(() => {});
+  setTimeout(() => { sndClaps.pause(); sndClaps.currentTime = 0; }, 3000);
+}
+
+function buildRockets(sequence, missingIdx) {
+  const scene = document.getElementById('rocket-scene');
+  scene.innerHTML = '';
+  sequence.forEach((num, i) => {
+    const isMissing = (i === missingIdx);
+    const wrap = document.createElement('div');
+    wrap.className = 'rocket-wrap' + (isMissing ? ' missing' : '');
+    wrap.id = 'rocket-' + i;
+    wrap.innerHTML = rocketSVG(num, isMissing, false) + '<div class="launchpad"></div>';
+    scene.appendChild(wrap);
+  });
+}
+
+function buildChoices(choices) {
+  const row = document.getElementById('choices-row');
+  row.innerHTML = '';
+  const shuffled = [...choices].sort(() => Math.random() - 0.5);
+  shuffled.forEach(n => {
+    const btn = document.createElement('div');
+    btn.className = 'choice-btn';
+    btn.dataset.val = n;
+    btn.textContent = n;
+    btn.onclick = () => selectChoice(n);
+    row.appendChild(btn);
+  });
+}
+
+function getChoiceBtn(val) { return document.querySelector('.choice-btn[data-val="' + val + '"]'); }
+function clearChoiceStates() { document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('correct','wrong','hint')); }
+
+function startGame() {
+  document.getElementById('intro-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display  = 'flex';
+  curQ = 0; score = 0;
+  loadQuestion();
+}
+
+function loadQuestion() {
+  if (curQ >= QUESTIONS.length) { showEnd(); return; }
+  answered = false; attempts = 0;
+
+  const q = QUESTIONS[curQ];
+  document.getElementById('q-num').textContent     = curQ + 1;
+  document.getElementById('score-val').textContent = score;
+  document.getElementById('prog-bar').style.width  = (curQ / QUESTIONS.length * 100) + '%';
+  document.getElementById('instruction-txt').textContent = q.text;
+
+  buildRockets(q.sequence, q.missingIdx);
+  buildChoices(q.choices);
+  speakSequence(q);
+}
+
+function selectChoice(val) {
+  if (answered) return;
+  const q = QUESTIONS[curQ];
+  const correct = q.sequence[q.missingIdx];
+  if (val === correct) registerCorrect();
+  else registerWrong(val);
+}
+
+function registerCorrect() {
+  if (answered) return;
+  answered = true;
+  score++;
+  document.getElementById('score-val').textContent = score;
+
+  const q = QUESTIONS[curQ];
+  const correct = q.sequence[q.missingIdx];
+
+  const wrap = document.getElementById('rocket-' + q.missingIdx);
+  wrap.classList.remove('missing');
+  wrap.classList.add('correct-anim');
+  wrap.innerHTML = rocketSVG(correct, false, true) + '<div class="launchpad"></div>';
+
+  clearChoiceStates();
+  getChoiceBtn(correct).classList.add('correct');
+
+  window.speechSynthesis?.cancel();
+  playClaps();
+  showToast('⭐ Correct!', '#4CAF50');
+  spawnConfetti();
+  setTimeout(nextQuestion, 3200);
+}
+
+function registerWrong(val) {
+  if (answered) return;
+  attempts++;
+
+  if (attempts === 1) {
+    sndWrong.currentTime = 0; if (!muted) sndWrong.play().catch(() => {});
+    showToast('❌ Try again!', '#f44336');
+    const wrongBtn = getChoiceBtn(val);
+    wrongBtn.classList.add('wrong');
+    const correctVal = QUESTIONS[curQ].sequence[QUESTIONS[curQ].missingIdx];
+    getChoiceBtn(correctVal).classList.add('hint');
+    setTimeout(() => { wrongBtn.classList.remove('wrong'); hideToast(); }, 900);
+  } else {
+    answered = true;
+    sndWrong.currentTime = 0; if (!muted) sndWrong.play().catch(() => {});
+    showToast('❌ Wrong!', '#f44336');
+    clearChoiceStates();
+    getChoiceBtn(val).classList.add('wrong');
+
+    const q = QUESTIONS[curQ];
+    const correctVal = q.sequence[q.missingIdx];
+    setTimeout(() => {
+      showToast('💡 Correct answer!', '#FF9800');
+      getChoiceBtn(val).classList.remove('wrong');
+      getChoiceBtn(correctVal).classList.add('correct');
+      const wrap = document.getElementById('rocket-' + q.missingIdx);
+      wrap.classList.remove('missing');
+      wrap.innerHTML = rocketSVG(correctVal, false, true) + '<div class="launchpad"></div>';
+      setTimeout(nextQuestion, 3000);
+    }, 1000);
+  }
+}
+
+function nextQuestion() { clearChoiceStates(); curQ++; loadQuestion(); }
+
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = color;
+  t.classList.add('show');
+  setTimeout(hideToast, 1800);
+}
+function hideToast() { document.getElementById('toast').classList.remove('show'); }
+
+function spawnConfetti() {
+  const colors = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF922B','#cc5de8','#ff6b81'];
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.cssText = `left:${Math.random()*100}vw;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>0.5?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*0.8}s;`;
+    document.body.appendChild(p);
+    p.addEventListener('animationend', () => p.remove());
+  }
+}
+
+function toggleMute() {
+  muted = !muted;
+  document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+  if (muted) { window.speechSynthesis?.cancel(); sndClaps.pause(); }
+  else if (curQ < QUESTIONS.length) speakSequence(QUESTIONS[curQ]);
+}
+
+function showEnd() {
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('end-screen').style.display  = 'flex';
+  document.getElementById('final-score').textContent   = score;
+  document.getElementById('end-stars').textContent = score >= 7 ? '⭐⭐⭐' : score >= 5 ? '⭐⭐' : '⭐';
+  window.speechSynthesis?.cancel();
+  playClaps(); spawnConfetti();
+  setTimeout(spawnConfetti, 800);
+}
+
+function restartGame() {
+  clearChoiceStates();
+  window.speechSynthesis?.cancel();
+  document.getElementById('end-screen').style.display  = 'none';
+  document.getElementById('game-screen').style.display = 'flex';
+  curQ = 0; score = 0; attempts = 0; answered = false;
+  loadQuestion();
+}
+</script>
+</body>
+</html>
